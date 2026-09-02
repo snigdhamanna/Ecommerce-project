@@ -144,3 +144,10 @@ MEDIA_URL = '/media/'
 
 # The absolute filesystem path to the directory where uploaded files are saved
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
+# SMTP Configuration for sending emails
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
+EMAIL_HOST_USER = 'mannasnigdha588@gmail.com'
+EMAIL_HOST_PASSWORD = 'lcrj dmts mtfr bzyi'
+EMAIL_USE_TLS = True
