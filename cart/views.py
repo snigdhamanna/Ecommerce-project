@@ -1,4 +1,3 @@
-from django.conf.locale import fr
 from django.shortcuts import render , redirect
 from .models import *
 from store.models import *
@@ -154,8 +153,6 @@ def cart(request , total=0 , quantity=0 ,cart_items=None):
         'cart_items': cart_items   ,
         'tax': tax,
         'grand_total':grand_total,
-    
-        
         }
         
     return render(request, 'store/cart.html',context)
@@ -163,10 +160,14 @@ def cart(request , total=0 , quantity=0 ,cart_items=None):
 
 
 def remove_cart(request , product_id , cart_item_id):
-    cart = Cart.objects.get(cart_id = _cart_id(request))
+    
     product = Product.objects.get(id = product_id)
     try:
-        cartitem = CartItem.objects.get(product=product, cart=cart, id=cart_item_id)
+        if request.user.is_authenticated:
+            cartitem = CartItem.objects.get(product=product, user=request.user, id=cart_item_id)
+        else:
+            cart = Cart.objects.get(cart_id = _cart_id(request))
+            cartitem = CartItem.objects.get(product=product, cart=cart, id=cart_item_id)
         if cartitem.quantity > 1:
             cartitem.quantity -= 1
             cartitem.save()
@@ -177,10 +178,15 @@ def remove_cart(request , product_id , cart_item_id):
     return redirect('cart')
 
 def remove_cart_item(request , product_id , cart_item_id):
-    cart = Cart.objects.get(cart_id = _cart_id(request))
+    
+    
     product = Product.objects.get(id = product_id)
     try:
-        cartitem = CartItem.objects.get(product=product, cart=cart, id=cart_item_id)
+        if request.user.is_authenticated:
+            cartitem = CartItem.objects.get(product=product, user=request.user, id=cart_item_id)
+        else:
+            cart = Cart.objects.get(cart_id = _cart_id(request))
+            cartitem = CartItem.objects.get(product=product, cart=cart, id=cart_item_id)
         cartitem.delete()
     except:
         pass
@@ -191,15 +197,18 @@ def checkout(request , total=0 , quantity=0 ,cart_items=None):
     tax=0
     grand_total=0
     try:
-        cart = Cart.objects.get(cart_id =_cart_id(request))
-        cart_items = CartItem.objects.filter(cart=cart,is_active=True)
+        if request.user.is_authenticated:
+                cart_items = CartItem.objects.filter(user=request.user , is_active=True)
+        else:
+            cart = Cart.objects.get(cart_id =_cart_id(request))
+            cart_items = CartItem.objects.filter(cart=cart,is_active=True)
         for item in cart_items:
             total += (item.product.price * item.quantity)
             quantity += item.quantity
         tax = (2 * total)/100
         grand_total = tax+total
     except ObjectDoesNotExist:
-        pass
+        pass 
     context ={
         'quantity':quantity,
         'total':total,

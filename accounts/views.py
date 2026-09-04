@@ -9,6 +9,8 @@ from .forms import RegistrationForm
 from django.contrib.sites.shortcuts import get_current_site
 from  cart.models import *
 
+import requests
+
 #emails
 from django.contrib.sites.shortcuts import get_current_site
 from django.template.loader import render_to_string
@@ -95,11 +97,24 @@ def login(request):
                     # for item in cart_item:
                     #     item.user = user
                     #     item.save()
+                    
             except:
                 pass
             auth.login(request, user)
             messages.success(request, 'You are now logged in.')
-            return redirect('dashboard')  
+            
+            #after logged in redirect to the page from where user came (in this case it is checkout page) 
+            url = request.META.get('HTTP_REFERER') # grab the url of the page from where user came
+            try:
+                query = requests.utils.urlparse(url).query
+                params = dict(x.split('=') for x in query.split('&'))
+                if 'next' in params:
+                    nextPage = params['next']
+                    return redirect(nextPage)   
+            except:
+                return redirect('dashboard')
+            
+                 
         else:
             messages.error(request, 'Invalid email or password.')
     return render(request, 'accounts/login.html')
@@ -172,7 +187,7 @@ def resetpassword_validate(request, uidb64, token):
         messages.error(request, 'This link has been expired!')
         return redirect('login')
           
-    return http.HttpResponse('Reset password validate view')
+    
 
 def resetPassword(request):
     if request.method == 'POST':
