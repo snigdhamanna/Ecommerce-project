@@ -22,7 +22,6 @@
                 {% endif %}
                 <p class="card-text mb-0">{{ order.email}} </p>
                 <p class="card-text mb-0">{{ order.phone }} </p>
-
             </div>
         </div>
         <div class="card">
@@ -65,7 +64,7 @@
       	</td>
       	<td>
       		<!-- col.// -->
-      				<label for="">{{cart_item.quantity}}</label>
+      				<label>{{cart_item.quantity}}</label>
       	</td>
       	<td>
       		<div class="price-wrap">
@@ -104,7 +103,7 @@
 			<p class="text-center mb-3">
 				<img src="{% static 'images/misc/payments.png' %}" height="26">
 			</p>
-			<a href="{% url 'checkout' %}" class="btn btn-primary btn-block"> Make Payment </a>
+			<div id="paypal-button-container"></div>
 		</div> <!-- card-body.// -->
 		</div> <!-- card.// -->
 
@@ -115,6 +114,69 @@
 
 </div> <!-- container .//  -->
 </section>
+
+<script>
+
+	function getCookie(name) {
+    var cookieValue = null;
+    if (document.cookie && document.cookie != '') {
+        var cookies = document.cookie.split(';');
+        for (var i = 0; i < cookies.length; i++) {
+            var cookie = jQuery.trim(cookies[i]);
+            // Does this cookie string begin with the name we want?
+            if (cookie.substring(0, name.length + 1) == (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+
+	var amount = "{{ grand_total }}";
+	var url = "{% url 'payments' %}";
+	var csrftoken = getCookie('csrftoken');
+	var orderID = "{{ order.order_number }}";
+	var payment_method = 'Paypal';
+
+
+    paypal.Buttons({
+        createOrder: function(data, actions) {
+            return actions.order.create({
+                purchase_units: [{
+                    amount: {
+                        value: amount,
+                    }
+                }]
+            });
+        },
+
+        onApprove: function(data, actions) {
+            return actions.order.capture().then(function(details) {
+				console.log(details);
+				sendData();
+                function sendData(){
+					fetch(url ,{
+						method : "POST",
+						headers : {
+							"Content-Type": "application/json",
+							"X-CSRFToken": csrftoken,
+						},
+						body : JSON.stringify({
+							order : orderID,
+							transID : details.id ,
+							payment_method : payment_method,
+							status : details.status,
+
+						})
+
+					})
+				}
+            });
+        }
+    }).render('#paypal-button-container');
+</script>
 
 
 {% endblock %}
