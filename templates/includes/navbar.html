@@ -32,9 +32,12 @@
 	</div>
 	<div class="col-lg col-sm col-md col-6 flex-grow-0">
 		<div class="category-wrap dropdown d-inline-block float-right">
-			<button type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown"> 
-				<i class="fa fa-bars"></i> All category 
+			
+			<button type="button" class="btn dropdown-toggle" data-toggle="dropdown" style="background-color: #2D5A27; color: white; border: none;">
+			  <i class="fa fa-bars"></i> All category
 			</button>
+
+			
 			<div class="dropdown-menu">
 				{% for category in links%}
 					<a class="dropdown-item" href="{{category.get_url}}"> {{category.category_name}} </a> 
@@ -46,14 +49,15 @@
 			</div>
 		</div>  <!-- category-wrap.// -->
 	</div> <!-- col.// -->
-	<a href="{% url 'store' %}" class="btn btn-outline-primary">Store</a>
+	<a href="{% url 'store' %}" class="btn" style="background-color: whitesmoke; color: #2D5A27; border-color: #2D5A27; ">Store</a>
 	<div class="col-lg  col-md-6 col-sm-12 col">
 		<form action="{% url 'search' %}" class="search" method="GET">
 			<div class="input-group w-100">
 			    <input type="text" class="form-control" style="width:60%;" placeholder="Search" name="keyword">
+
 			    
 			    <div class="input-group-append">
-			      <button class="btn btn-primary" type="submit">
+			      <button class="btn " type="submit" style="background-color: #2D5A27; color: white;">
 			        <i class="fa fa-search"></i>
 			      </button>
 			    </div>
