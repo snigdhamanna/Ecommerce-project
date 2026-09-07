@@ -123,7 +123,7 @@
         var cookies = document.cookie.split(';');
         for (var i = 0; i < cookies.length; i++) {
             var cookie = jQuery.trim(cookies[i]);
-            // Does this cookie string begin with the name we want?
+
             if (cookie.substring(0, name.length + 1) == (name + '=')) {
                 cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
                 break;
@@ -139,6 +139,7 @@
 	var csrftoken = getCookie('csrftoken');
 	var orderID = "{{ order.order_number }}";
 	var payment_method = 'Paypal';
+    var redirect_url ="{% url 'order_complete' %}" ;
 
 
     paypal.Buttons({
@@ -168,10 +169,19 @@
 							transID : details.id ,
 							payment_method : payment_method,
 							status : details.status,
+						}),
 
-						})
 
 					})
+                    .then((response) => response.json())
+                    .then((data) => {
+                        window.location.href = redirect_url + '?order_number='+data.order_number+'&payment_id='+data.transID;
+
+                        // console.log('sucess-', data);
+                        // console.log('Transaction Completed');
+
+                    })
+                
 				}
             });
         }

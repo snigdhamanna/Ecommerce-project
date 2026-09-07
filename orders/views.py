@@ -1,11 +1,17 @@
 from django.shortcuts import render, redirect
-from django.http import HttpResponse
+from django.http import HttpResponse , JsonResponse
 from cart.models import CartItem
 from .forms import OrderForm
 from .models import Order, Payment, OrderProduct
 from django.contrib import messages
+from store.models import *
 import datetime
 import json
+
+
+#email
+from django.template.loader import render_to_string
+from django.core.mail import EmailMessage
 
 
 def payments(request):
@@ -46,30 +52,30 @@ def payments(request):
         orderproduct.save()
 
 
-    #     # Reduce the quantity of the sold products
-    #     product = Product.objects.get(id=item.product_id)
-    #     product.stock -= item.quantity
-    #     product.save()
+        # Reduce the quantity 
+        product = Product.objects.get(id=item.product_id)
+        product.stock -= item.quantity
+        product.save()
 
     # # Clear cart
-    # CartItem.objects.filter(user=request.user).delete()
+    CartItem.objects.filter(user=request.user).delete()
 
-    # # Send order recieved email to customer
-    # mail_subject = 'Thank you for your order!'
-    # message = render_to_string('orders/order_recieved_email.html', {
-    #     'user': request.user,
-    #     'order': order,
-    # })
-    # to_email = request.user.email
-    # send_email = EmailMessage(mail_subject, message, to=[to_email])
-    # send_email.send()
+    # Send order recieved email to customer
+    mail_subject = 'Thank you for your order!'
+    message = render_to_string('orders/order_recieved_email.html', {
+        'user': request.user,
+        'order': order,
+    })
+    to_email = request.user.email
+    send_email = EmailMessage(mail_subject, message, to=[to_email])
+    send_email.send()
 
-    # data = {
-    #     'order_number': order.order_number,
-    #     'transID': payment.payment_id,
-    # }
-    # return JsonResponse(data)
-    return render(request,'orders/payments.html')
+    data = {
+        'order_number': order.order_number,
+        'transID': payment.payment_id,
+    }
+    return JsonResponse(data)
+    
 
 
 
@@ -138,3 +144,29 @@ def place_order(request , total=0, quantity=0):
         
 
         return redirect('checkout')  # Redirect to checkout page if the form is not valid or if the request method is not POST
+    
+    
+def order_complete(request):
+    order_number = request.GET.get('order_number')
+    trans_ID = request.GET.get('payment_id')
+    
+    try:
+        order = Order.objects.get(order_number= order_number , is_ordered = True)
+        orderproducts = OrderProduct.objects.filter(order_id= order.id)
+        payment = Payment.objects.get(payment_id= trans_ID)
+        context ={
+            'order':order,
+            'orderproducts':orderproducts,
+            'order_number':order.order_number,
+            'transID': payment.payment_id,
+            'payment':payment,
+            
+            
+        }
+        return render(request, 'orders/order_complete.html', context)
+    except(Payment.DoesNotExist , Order.DoesNotExist):
+        print('not working')
+        return redirect('home')
+    
+    
+    
